@@ -1,0 +1,15 @@
+
+// 用來查看距離是否正確
+log.Printf("使用者經度:%v", Userlongitude)
+log.Printf("使用者經度:%v", Userlatitude)
+for _, i := range *Target {
+	log.Printf("使用者到%s的距離為:%.2f公尺", i.PhotoLocation, template.Haversine(Userlatitude, Userlongitude, template.StringChangeFloat64(i.PhotoCoordinate_lat), template.StringChangeFloat64(i.PhotoCoordinate_lng))*1000)
+}
+
+file.Seek(0, 0)
+	img, _, err := image.DecodeConfig(file)
+	if err != nil {
+		c.JSON(500, gin.H{"message": fmt.Sprintf("無法讀取圖片信息: %v", err)})
+		return
+	}
+	log.Printf("%v %v", img.Height, img.Width)

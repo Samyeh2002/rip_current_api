@@ -8,10 +8,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"rip_current_mod/templates"
 
 	"github.com/gin-gonic/gin"
 )
+
+// 結構
 
 // 測試 1
 func Connect_test_get(c *gin.Context) {
@@ -148,4 +152,81 @@ func Connect_test_Error(c *gin.Context) {
 
 	// 輸出請求體（在這個示例中只是打印請求體的長度）
 	fmt.Println("Body Length:", req.ContentLength)
+}
+
+// 測試:5 調用Python
+func Call_Python(c *gin.Context) {
+
+	// 變數
+	interpreter := "C:/Users/PC3/AppData/Local/Programs/Python/Python313/python.exe"
+	execution_File := "C:/Users/PC3/Documents/Python/test2.py"
+	target := c.DefaultQuery("path", "null")
+
+	log.Printf("測試:%v", target)
+
+	cmd := exec.Command(interpreter, execution_File, filepath.Join(templates.GlobalRootPath, target))
+
+	// 執行並獲取輸出--
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Println("執行 Python 腳本時出錯1:", err)
+		log.Println("執行 Python 腳本時出錯2:", output)
+		c.JSON(400, gin.H{"message": fmt.Sprintf("失敗 路徑:%v", filepath.Join(templates.GlobalRootPath, target))})
+		return
+	}
+
+	// --
+	fmt.Println("Python 輸出:", string(output))
+}
+
+// 測試:5 調用Python 掃圖在回傳
+func Call_Python_Return() {
+
+}
+
+// 測試:6 Gmail
+func SendGmailTest(c *gin.Context) {
+
+	//SendGmail()
+	log.Printf("用戶IP:%v", c.ClientIP())
+}
+
+// 測試參數
+func SyncTest(c *gin.Context) {
+
+	// 變數
+	Target := c.DefaultQuery("mod", "")
+	var count int64
+
+	switch Target {
+	case "1": // OperationCache 測試
+
+		templates.UserOTPCache.Range(func(key, value any) bool {
+
+			// 累加
+			count++
+
+			// 取值
+			if testValue, ok := value.(UserOTPstruct); !ok {
+
+				// 錯誤 非目標
+				return true
+
+			} else {
+
+				// 輸出
+				log.Printf("目標:%v 金鑰:%v 驗證碼:%v 插入時間:%v", testValue.UserID, testValue.UserOTPsecret, testValue.VerificationCode, testValue.InsertTime)
+				return true
+			}
+		})
+
+		// 輸出有幾筆數據
+		c.JSON(200, fmt.Sprintf("總共有:%v", count))
+
+	case "2": // UserOTPCache測試
+	case "3": // PasswordForgotCache測試
+	default:
+		log.Print("Sync測試沒給參數")
+	}
+
 }
